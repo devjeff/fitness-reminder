@@ -22,9 +22,9 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -42,6 +42,7 @@ import de.devjeff.fitnessreminder.controller.model.Reminder;
 
 @SuppressWarnings("serial")
 public class ReminderView extends JFrame {
+	private static final String GITHUB_LINK = "https://github.com/devjeff/fitness-reminder";
 	private TrayIcon trayIcon;
 	private SystemTray tray;
 	private ReminderController controller;
@@ -56,8 +57,7 @@ public class ReminderView extends JFrame {
 	public ReminderView() {
 		super("Fitness Reminder");
 		controller = new ReminderController(this);
-		URL imgUrl = ReminderView.class.getClassLoader().getResource("alarm.png");
-		Image image = Toolkit.getDefaultToolkit().getImage(imgUrl);
+		Image image = ViewUtil.getResourceImage("alarm.png");
 
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -90,9 +90,7 @@ public class ReminderView extends JFrame {
 				controller.loadReminder();
 			} catch (IOException | SchedulerException e) {
 				JOptionPane.showMessageDialog(ReminderView.this,
-					    "Error while loading reminder config: " + e.getMessage(),
-					    "Error",
-					    JOptionPane.ERROR_MESSAGE);
+						"Error while loading reminder config: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
@@ -111,6 +109,7 @@ public class ReminderView extends JFrame {
 
 		startTimeField = new JTextField("8");
 		startTimeField.setPreferredSize(new Dimension(60, 20));
+		startTimeField.setMinimumSize(startTimeField.getPreferredSize());
 		c.gridx = 1;
 		c.gridy = 0;
 		mainPanel.add(startTimeField, c);
@@ -122,6 +121,7 @@ public class ReminderView extends JFrame {
 
 		endTimeField = new JTextField("19");
 		endTimeField.setPreferredSize(new Dimension(60, 20));
+		endTimeField.setMinimumSize(endTimeField.getPreferredSize());
 		c.gridx = 3;
 		c.gridy = 0;
 		c.anchor = GridBagConstraints.LINE_START;
@@ -137,6 +137,7 @@ public class ReminderView extends JFrame {
 
 		repeatField = new JTextField("30");
 		repeatField.setPreferredSize(new Dimension(60, 20));
+		repeatField.setMinimumSize(repeatField.getPreferredSize());
 		c.gridx = 1;
 		c.gridy = 1;
 		mainPanel.add(repeatField, c);
@@ -170,9 +171,9 @@ public class ReminderView extends JFrame {
 		c.gridwidth = 1;
 		c.weightx = 0;
 
-		JButton chooseImageButton = new JButton("...");
-		c.gridx = 4;
-		c.gridy = 2;
+		JButton chooseImageButton = new JButton(new ImageIcon(ViewUtil.getResourceImage("open_folder.png")));
+		c.gridx = 1;
+		c.gridy = 3;
 		mainPanel.add(chooseImageButton, c);
 		chooseImageButton.addActionListener((event) -> {
 			JFileChooser fileChooser = new JFileChooser();
@@ -183,11 +184,22 @@ public class ReminderView extends JFrame {
 				imagePathField.setText(selectedFile.getAbsolutePath());
 			}
 		});
+		
+		JButton chooseResourceImageButton = new JButton(new ImageIcon(ViewUtil.getResourceImage("open_pics.png")));
+		c.gridx = 2;
+		c.gridy = 3;
+		mainPanel.add(chooseResourceImageButton, c);
+		chooseResourceImageButton.addActionListener((event) -> {
+			String selectedPath = PredefinedBackgroundsView.show(ReminderView.this);
+			if (selectedPath != null) {
+				imagePathField.setText(selectedPath);
+			}
+		});
 
 		// Fourth line ============================================================== //
 		JLabel textLabel = new JLabel("Displayed text line 1:");
 		c.gridx = 0;
-		c.gridy = 3;
+		c.gridy = 4;
 		c.anchor = GridBagConstraints.LINE_END;
 		mainPanel.add(textLabel, c);
 		c.anchor = GridBagConstraints.CENTER;
@@ -195,7 +207,7 @@ public class ReminderView extends JFrame {
 		textField = new JTextField("Come on");
 		textField.setPreferredSize(new Dimension(60, 20));
 		c.gridx = 1;
-		c.gridy = 3;
+		c.gridy = 4;
 		c.gridwidth = 4;
 		c.weightx = 0.5;
 		mainPanel.add(textField, c);
@@ -205,7 +217,7 @@ public class ReminderView extends JFrame {
 		// Fifth line ============================================================== //
 		textLabel = new JLabel("Displayed text line 2:");
 		c.gridx = 0;
-		c.gridy = 4;
+		c.gridy = 5;
 		c.anchor = GridBagConstraints.LINE_END;
 		mainPanel.add(textLabel, c);
 		c.anchor = GridBagConstraints.CENTER;
@@ -213,14 +225,14 @@ public class ReminderView extends JFrame {
 		textField2 = new JTextField("You know you need it!");
 		textField2.setPreferredSize(new Dimension(60, 20));
 		c.gridx = 1;
-		c.gridy = 4;
+		c.gridy = 5;
 		c.gridwidth = 4;
 		c.weightx = 0.5;
 		mainPanel.add(textField2, c);
 		c.gridwidth = 1;
 		c.weightx = 0;
 
-				
+		// Buttons ============================================================== //
 		JButton saveButton = new JButton("Save");
 		c.gridx = 5;
 		c.gridy = 0;
@@ -231,10 +243,8 @@ public class ReminderView extends JFrame {
 						Integer.parseInt(startTimeField.getText()), Integer.parseInt(endTimeField.getText()),
 						Integer.parseInt(repeatField.getText()));
 			} catch (NumberFormatException | IOException | SchedulerException | ValidationException e) {
-				JOptionPane.showMessageDialog(ReminderView.this,
-					    "Error while saving: " + e.getMessage(),
-					    "Error",
-					    JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(ReminderView.this, "Error while saving: " + e.getMessage(), "Error",
+						JOptionPane.ERROR_MESSAGE);
 			}
 		});
 
@@ -242,8 +252,35 @@ public class ReminderView extends JFrame {
 		c.gridx = 5;
 		c.gridy = 1;
 		mainPanel.add(previewButton, c);
-		previewButton.addActionListener(
-				(event) -> controller.previewReminder(imagePathField.getText(), getDisplayText()));
+		previewButton.addActionListener((event) -> {
+			try {
+				controller.previewReminder(imagePathField.getText(), getDisplayText());
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(ReminderView.this, "Error while loading image: " + e.getMessage(),
+						"Error", JOptionPane.ERROR_MESSAGE);
+			}
+		});
+
+		Image buttonIcon = ViewUtil.getResourceImage("info.png");
+		JButton infoButton = new JButton(new ImageIcon(buttonIcon));
+		infoButton.setPreferredSize(new Dimension(64, 64));
+		infoButton.setBorderPainted(false);
+		infoButton.setFocusPainted(false);
+		infoButton.setContentAreaFilled(false);
+		c.gridx = 5;
+		c.gridy = 4;
+		c.gridheight = 2;
+		c.anchor = GridBagConstraints.BASELINE;
+		mainPanel.add(infoButton, c);
+		infoButton.addActionListener((event) -> {
+			try {
+				controller.openUrlInBrowser(GITHUB_LINK);
+			} catch (UnsupportedOperationException e) {
+				JTextField infoText = new JTextField("Please visit: " + GITHUB_LINK);
+				infoText.setEditable(false);
+				JOptionPane.showMessageDialog(ReminderView.this, infoText, "Info", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 
 		return mainPanel;
 	}
@@ -265,7 +302,7 @@ public class ReminderView extends JFrame {
 		});
 
 		addWindowListener(new WindowAdapter() {
-			
+
 			@Override
 			public void windowClosing(WindowEvent e) {
 				try {
@@ -277,16 +314,17 @@ public class ReminderView extends JFrame {
 					System.out.println("unable to add to tray");
 				}
 			}
-			
+
 		});
-		
+
 		addWindowStateListener(new WindowStateListener() {
 			@Override
 			public void windowStateChanged(WindowEvent e) {
 				if (e.getNewState() == ICONIFIED) {
 					try {
 						setVisible(false);
-						if (tray.getTrayIcons().length == 0) tray.add(trayIcon);
+						if (tray.getTrayIcons().length == 0)
+							tray.add(trayIcon);
 					} catch (AWTException ex) {
 						System.out.println("unable to add to tray");
 					}
@@ -294,7 +332,8 @@ public class ReminderView extends JFrame {
 				if (e.getNewState() == 7 && tray.getTrayIcons().length == 0) {
 					try {
 						setVisible(false);
-						if (tray.getTrayIcons().length == 0) tray.add(trayIcon);
+						if (tray.getTrayIcons().length == 0)
+							tray.add(trayIcon);
 					} catch (AWTException ex) {
 						System.out.println("unable to add to system tray");
 					}
@@ -340,7 +379,7 @@ public class ReminderView extends JFrame {
 			endTimeField.setText("" + reminder.getEndHours());
 			repeatField.setText("" + reminder.getRepeatMinutes());
 			imagePathField.setText(reminder.getImagePath());
-			
+
 			String[] lines = reminder.getText().split("\\n");
 			textField.setText(lines[0]);
 			if (lines.length > 1) {

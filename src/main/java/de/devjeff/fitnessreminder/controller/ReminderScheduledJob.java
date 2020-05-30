@@ -17,7 +17,7 @@ public class ReminderScheduledJob implements Job {
     	JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
     	String imagePath = jobDataMap.get(KEY_IMAGE_PATH).toString();
     	URL imageUrl = new FilepathToUrlConverter().getUrl(imagePath);
-		new ImageView(imageUrl, jobDataMap.get(KEY_TEXT).toString());
+		ImageView.show(imageUrl, jobDataMap.get(KEY_TEXT).toString());
     }
 
 	

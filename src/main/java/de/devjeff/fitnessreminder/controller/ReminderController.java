@@ -1,6 +1,9 @@
 package de.devjeff.fitnessreminder.controller;
 
+import java.awt.Desktop;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -35,14 +38,15 @@ public class ReminderController {
 	private static final String DEFAULT_NAME = "defaultReminder";
 	private static final String FILE_NAME = "FitnessReminder.json";
 	private static final Logger logger = LoggerFactory.getLogger(ReminderController.class);
-	
+
 	private final ReminderView view;
 
 	public ReminderController(ReminderView view) {
 		this.view = view;
 	}
 
-	public void saveReminder(String imagePath, String text, int startHours, int endHours, int repeatMinutes) throws IOException, SchedulerException, ValidationException {
+	public void saveReminder(String imagePath, String text, int startHours, int endHours, int repeatMinutes)
+			throws IOException, SchedulerException, ValidationException {
 		String cronExpression = "0 0/" + repeatMinutes + " " + startHours + "-" + endHours + " * * ?";
 		String actualText = text == null ? "" : text;
 		if (startHours <= 0 || endHours <= 0 || repeatMinutes <= 0 || imagePath.isEmpty()) {
@@ -68,7 +72,7 @@ public class ReminderController {
 
 	public void previewReminder(String imagePath, String text) {
 		URL imageUrl = new FilepathToUrlConverter().getUrl(imagePath);
-		new ImageView(imageUrl, text);
+		ImageView.show(imageUrl, text);
 	}
 
 	public void loadReminder() throws IOException, SchedulerException {
@@ -85,11 +89,28 @@ public class ReminderController {
 		view.onReminderLoaded(reminder);
 	}
 
+	public Path getConfigFile() {
+		return Paths.get(System.getProperty("user.home") + "/" + FILE_NAME);
+	}
+
+	public void openUrlInBrowser(String url) {
+		if (Desktop.isDesktopSupported()) {
+			Desktop desktop = Desktop.getDesktop();
+			try {
+				desktop.browse(new URI(url));
+			} catch (IOException | URISyntaxException e) {
+				logger.error(e.getMessage(), e);
+			}
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	private Reminder createReminder(String imagePath, String cronExpression, String text, int startHours, int endHours,
 			int repeatMinutes) {
 		return new Reminder(DEFAULT_NAME, imagePath, cronExpression, text, startHours, endHours, repeatMinutes);
 	}
-	
+
 	private void scheduleJob(Reminder reminder, Scheduler sched) throws SchedulerException {
 		JobDetail job = JobBuilder.newJob(ReminderScheduledJob.class).withIdentity(reminder.getName(), GROUP_NAME)
 				.usingJobData(ReminderScheduledJob.KEY_IMAGE_PATH, reminder.getImagePath())
@@ -106,10 +127,6 @@ public class ReminderController {
 		if (!sched.isStarted())
 			sched.start();
 		return sched;
-	}
-	
-	public Path getConfigFile() {
-		return Paths.get(System.getProperty("user.home") + "/" + FILE_NAME);
 	}
 
 }

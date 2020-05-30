@@ -11,6 +11,8 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -26,8 +28,17 @@ public class ImageView extends JFrame {
 	private static final int INITIAL_FONT_SIZE = 80;
 	private static final int IMG_WIDTH = 1000;
 	private static final int TEXT_PADDING = 20;
-	
-	public ImageView(URL imageUrl, String message) {
+
+	private static boolean alreadyDisplayed;
+
+	public static void show(URL imageUrl, String message) {
+		if (!alreadyDisplayed) {
+			new ImageView(imageUrl, message);
+			alreadyDisplayed = true;
+		}
+	}
+
+	private ImageView(URL imageUrl, String message) {
 		super("Fitness Reminder");
 		JLabel label = new JLabel();
 		label.setHorizontalAlignment(JLabel.CENTER);
@@ -41,30 +52,30 @@ public class ImageView extends JFrame {
 		}
 
 		getContentPane().add(label, BorderLayout.CENTER);
+		setIconImage(ViewUtil.getResourceImage("alarm.png"));
 		setVisible(true);
 		pack();
 		setLocationRelativeTo(null); // location is relative to the main screen in case there are multiple screens
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
-	
+
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent we) {
+				alreadyDisplayed = false;
+			}
+		});
 		toFront();
 		requestFocus();
 	}
-	
+
 	private Image drawTextOnImage(BufferedImage old, String message) {
 		String[] lines = message.split("\n");
 		if (lines.length > 2) {
 			lines = new String[] { lines[0], lines[1] };
 		}
-		int w = IMG_WIDTH;
-		double scaleFactor = old.getWidth() * 1.0 / IMG_WIDTH;
-		boolean isScalingDown = old.getWidth() > IMG_WIDTH;
-		int h =  (int) (isScalingDown ? old.getHeight() / scaleFactor : old.getHeight() * scaleFactor);
-
-		BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage img = ViewUtil.getScaledImage(old, IMG_WIDTH, this);
 		Graphics2D g2d = img.createGraphics();
-		g2d.drawImage(old, 0, 0, w, h, this);
 
 		Font font = new Font(Font.SANS_SERIF, Font.BOLD, INITIAL_FONT_SIZE);
 		g2d.setFont(font);
@@ -85,9 +96,9 @@ public class ImageView extends JFrame {
 			int x = (img.getWidth() - textWidth + TEXT_PADDING) / 2;
 			int y = lineCount == 1 ? fm.getHeight() - 10 : (img.getHeight() - 20);
 			lineCount++;
-			if (line.isEmpty()) 
+			if (line.isEmpty())
 				continue;
-			
+
 			TextLayout tl = new TextLayout(line, font, g2d.getFontRenderContext());
 			Shape shape = tl.getOutline(null);
 
