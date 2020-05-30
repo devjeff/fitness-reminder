@@ -9,16 +9,19 @@ import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
+import java.security.CodeSource;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -31,13 +34,20 @@ import de.devjeff.fitnessreminder.controller.FilepathToUrlConverter;
 
 public class PredefinedBackgroundsView extends JDialog {
 
-	private String selectedPath;
-
+	private URI selectedPath;
+	private static String pattern = "(/|" + Pattern.quote(System.getProperty("file.separator")) + ")";
+	private static PredefinedBackgroundsView instance;
+	
 	public static String show(JFrame parent) {
-		PredefinedBackgroundsView view = new PredefinedBackgroundsView(parent);
-		view.setVisible(true);
-		view.dispose();
-		return FilepathToUrlConverter.PREDEFINED_URI_SCHEME + new File(view.selectedPath).getName();
+		instance = instance == null ? new PredefinedBackgroundsView(parent) : instance;
+		instance.setVisible(true);
+//		instance.dispose();
+
+		if (instance.selectedPath != null) {
+			String[] splittedFileName = instance.selectedPath.toString().split(pattern);
+			return FilepathToUrlConverter.PREDEFINED_URI_SCHEME + splittedFileName[splittedFileName.length - 1];
+		}
+		return null;
 	}
 
 	public PredefinedBackgroundsView(JFrame parent) {
@@ -59,39 +69,51 @@ public class PredefinedBackgroundsView extends JDialog {
 		grid.setLayout(layout);
 
 		try {
-			Path myPath = getPredefinedPath();
-			Files.list(myPath).forEach((path) -> grid.add(createImageCard(path)));
-		} catch (IOException | URISyntaxException e) {
+			URI predefinedPicPath = PredefinedBackgroundsView.class.getClassLoader().getResource("predefined").toURI();
+			Path myPath;
+			if (predefinedPicPath.getScheme().equals("jar")) {
+				// TODO pretty hacky solution. Is it really that complicated?
+				CodeSource src = PredefinedBackgroundsView.class.getProtectionDomain().getCodeSource();
+				List<String> list = new ArrayList<String>();
+				if (src != null) {
+					URL jar = src.getLocation();
+					try (ZipInputStream zip = new ZipInputStream(jar.openStream())) {
+						ZipEntry ze = null;
+						while ((ze = zip.getNextEntry()) != null) {
+							String entryName = ze.getName();
+							if (entryName.startsWith("predefined") && entryName.endsWith(".jpg")) {
+								list.add(entryName);
+							}
+						}
+					}
+					for (String entry : list) {
+						grid.add(createImageCard(
+								PredefinedBackgroundsView.class.getClassLoader().getResource(entry).toURI()));
+					}
+				}
+			} else {
+				myPath = Paths.get(predefinedPicPath);
+				Files.list(myPath).forEach((path) -> grid.add(createImageCard(path.toUri())));
+			}
+		} catch (IOException |
+
+				URISyntaxException e) {
 			e.printStackTrace();
 		}
 		return grid;
 	}
 
-	private Path getPredefinedPath() throws URISyntaxException, IOException {
-		URI predefinedPicPath = PredefinedBackgroundsView.class.getClassLoader().getResource("predefined").toURI();
-		Path myPath;
-		if (predefinedPicPath.getScheme().equals("jar")) {
-			try (FileSystem fileSystem = FileSystems.newFileSystem(predefinedPicPath,
-					Collections.<String, Object>emptyMap())) {
-				myPath = fileSystem.getPath("predefined");
-			}
-		} else {
-			myPath = Paths.get(predefinedPicPath);
-		}
-		return myPath;
-	}
-
-	private Component createImageCard(Path imgPath) {
+	private Component createImageCard(URI imgPath) {
 		JLabel label = new JLabel();
 		label.setHorizontalAlignment(JLabel.CENTER);
 		try {
-			BufferedImage originalImage = ImageIO.read(imgPath.toFile());
+			BufferedImage originalImage = ImageIO.read(imgPath.toURL());
 			BufferedImage updatedImage = ViewUtil.getScaledImage(originalImage, 400, this);
 			label.setIcon(new ImageIcon(updatedImage));
 			label.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mousePressed(MouseEvent e) {
-					selectedPath = imgPath.toString();
+					selectedPath = imgPath;
 					setVisible(false);
 				}
 			});
@@ -100,4 +122,5 @@ public class PredefinedBackgroundsView extends JDialog {
 		}
 		return label;
 	}
+
 }
