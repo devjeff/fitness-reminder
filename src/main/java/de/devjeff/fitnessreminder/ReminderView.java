@@ -47,8 +47,6 @@ public class ReminderView extends JFrame {
 	private SystemTray tray;
 	private ReminderController controller;
 
-	private JTextField startTimeField;
-	private JTextField endTimeField;
 	private JTextField repeatField;
 	private JTextField imagePathField;
 	private JTextField textField;
@@ -102,36 +100,9 @@ public class ReminderView extends JFrame {
 		c.insets = new Insets(4, 4, 4, 4);
 
 		// First line ============================================================== //
-		JLabel startTimeLabel = new JLabel("Starting (hours) from:");
-		c.gridx = 0;
-		c.gridy = 0;
-		mainPanel.add(startTimeLabel, c);
-
-		startTimeField = new JTextField("8");
-		startTimeField.setPreferredSize(new Dimension(60, 20));
-		startTimeField.setMinimumSize(startTimeField.getPreferredSize());
-		c.gridx = 1;
-		c.gridy = 0;
-		mainPanel.add(startTimeField, c);
-
-		JLabel endTimeLabel = new JLabel("to:");
-		c.gridx = 2;
-		c.gridy = 0;
-		mainPanel.add(endTimeLabel, c);
-
-		endTimeField = new JTextField("19");
-		endTimeField.setPreferredSize(new Dimension(60, 20));
-		endTimeField.setMinimumSize(endTimeField.getPreferredSize());
-		c.gridx = 3;
-		c.gridy = 0;
-		c.anchor = GridBagConstraints.LINE_START;
-		mainPanel.add(endTimeField, c);
-		c.anchor = GridBagConstraints.LINE_END;
-
-		// Second line ============================================================ //
 		JLabel repeatLabel = new JLabel("Repeat every:");
 		c.gridx = 0;
-		c.gridy = 1;
+		c.gridy = 0;
 		mainPanel.add(repeatLabel, c);
 		c.anchor = GridBagConstraints.CENTER;
 
@@ -139,12 +110,12 @@ public class ReminderView extends JFrame {
 		repeatField.setPreferredSize(new Dimension(60, 20));
 		repeatField.setMinimumSize(repeatField.getPreferredSize());
 		c.gridx = 1;
-		c.gridy = 1;
+		c.gridy = 0;
 		mainPanel.add(repeatField, c);
 
 		JLabel timeUnitLabel = new JLabel("minutes");
 		c.gridx = 2;
-		c.gridy = 1;
+		c.gridy = 0;
 		c.gridwidth = 2;
 		c.anchor = GridBagConstraints.LINE_START;
 		mainPanel.add(timeUnitLabel, c);
@@ -154,16 +125,16 @@ public class ReminderView extends JFrame {
 		// Third line ============================================================== //
 		JLabel imagePathLabel = new JLabel("Image path:");
 		c.gridx = 0;
-		c.gridy = 2;
+		c.gridy = 1;
 		c.anchor = GridBagConstraints.LINE_END;
 		mainPanel.add(imagePathLabel, c);
 		c.anchor = GridBagConstraints.CENTER;
 
 		imagePathField = new JTextField();
 		imagePathField.setEnabled(false);
-		imagePathField.setPreferredSize(new Dimension(120, 20));
+		imagePathField.setPreferredSize(new Dimension(250, 20));
 		c.gridx = 1;
-		c.gridy = 2;
+		c.gridy = 1;
 		c.gridwidth = 3;
 		c.weightx = 0.5;
 		c.fill = GridBagConstraints.HORIZONTAL;
@@ -173,7 +144,7 @@ public class ReminderView extends JFrame {
 
 		JButton chooseImageButton = new JButton(new ImageIcon(ViewUtil.getResourceImage("open_folder.png")));
 		c.gridx = 1;
-		c.gridy = 3;
+		c.gridy = 2;
 		mainPanel.add(chooseImageButton, c);
 		chooseImageButton.addActionListener((event) -> {
 			JFileChooser fileChooser = new JFileChooser();
@@ -184,10 +155,10 @@ public class ReminderView extends JFrame {
 				imagePathField.setText(selectedFile.getAbsolutePath());
 			}
 		});
-		
+
 		JButton chooseResourceImageButton = new JButton(new ImageIcon(ViewUtil.getResourceImage("open_pics.png")));
 		c.gridx = 2;
-		c.gridy = 3;
+		c.gridy = 2;
 		mainPanel.add(chooseResourceImageButton, c);
 		chooseResourceImageButton.addActionListener((event) -> {
 			String selectedPath = PredefinedBackgroundsView.show(ReminderView.this);
@@ -199,15 +170,15 @@ public class ReminderView extends JFrame {
 		// Fourth line ============================================================== //
 		JLabel textLabel = new JLabel("Displayed text line 1:");
 		c.gridx = 0;
-		c.gridy = 4;
+		c.gridy = 3;
 		c.anchor = GridBagConstraints.LINE_END;
 		mainPanel.add(textLabel, c);
 		c.anchor = GridBagConstraints.CENTER;
 
 		textField = new JTextField("Come on");
-		textField.setPreferredSize(new Dimension(60, 20));
+		textField.setPreferredSize(new Dimension(120, 20));
 		c.gridx = 1;
-		c.gridy = 4;
+		c.gridy = 3;
 		c.gridwidth = 4;
 		c.weightx = 0.5;
 		mainPanel.add(textField, c);
@@ -217,15 +188,15 @@ public class ReminderView extends JFrame {
 		// Fifth line ============================================================== //
 		textLabel = new JLabel("Displayed text line 2:");
 		c.gridx = 0;
-		c.gridy = 5;
+		c.gridy = 4;
 		c.anchor = GridBagConstraints.LINE_END;
 		mainPanel.add(textLabel, c);
 		c.anchor = GridBagConstraints.CENTER;
 
 		textField2 = new JTextField("You know you need it!");
-		textField2.setPreferredSize(new Dimension(60, 20));
+		textField2.setPreferredSize(new Dimension(120, 20));
 		c.gridx = 1;
-		c.gridy = 5;
+		c.gridy = 4;
 		c.gridwidth = 4;
 		c.weightx = 0.5;
 		mainPanel.add(textField2, c);
@@ -239,8 +210,7 @@ public class ReminderView extends JFrame {
 		mainPanel.add(saveButton, c);
 		saveButton.addActionListener((event) -> {
 			try {
-				controller.saveReminder(imagePathField.getText(), getDisplayText(),
-						Integer.parseInt(startTimeField.getText()), Integer.parseInt(endTimeField.getText()),
+				controller.saveReminder(imagePathField.getText(), getDisplayText(), 0, 0,
 						Integer.parseInt(repeatField.getText()));
 			} catch (NumberFormatException | IOException | SchedulerException | ValidationException e) {
 				JOptionPane.showMessageDialog(ReminderView.this, "Error while saving: " + e.getMessage(), "Error",
@@ -268,7 +238,7 @@ public class ReminderView extends JFrame {
 		infoButton.setFocusPainted(false);
 		infoButton.setContentAreaFilled(false);
 		c.gridx = 5;
-		c.gridy = 4;
+		c.gridy = 3;
 		c.gridheight = 2;
 		c.anchor = GridBagConstraints.BASELINE;
 		mainPanel.add(infoButton, c);
@@ -375,8 +345,6 @@ public class ReminderView extends JFrame {
 
 	public void onReminderLoaded(Reminder reminder) {
 		if (reminder != null) {
-			startTimeField.setText("" + reminder.getStartHours());
-			endTimeField.setText("" + reminder.getEndHours());
 			repeatField.setText("" + reminder.getRepeatMinutes());
 			imagePathField.setText(reminder.getImagePath());
 

@@ -9,17 +9,19 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 
 import javax.xml.bind.ValidationException;
 
 import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
@@ -49,7 +51,7 @@ public class ReminderController {
 			throws IOException, SchedulerException, ValidationException {
 		String cronExpression = "0 0/" + repeatMinutes + " " + startHours + "-" + endHours + " * * ?";
 		String actualText = text == null ? "" : text;
-		if (startHours <= 0 || endHours <= 0 || repeatMinutes <= 0 || imagePath.isEmpty()) {
+		if (repeatMinutes <= 0 || imagePath.isEmpty()) {
 			throw new ValidationException("Invalid parameters");
 		}
 		Reminder reminder = createReminder(imagePath, cronExpression, actualText, startHours, endHours, repeatMinutes);
@@ -116,8 +118,18 @@ public class ReminderController {
 				.usingJobData(ReminderScheduledJob.KEY_IMAGE_PATH, reminder.getImagePath())
 				.usingJobData(ReminderScheduledJob.KEY_TEXT, reminder.getText()).build();
 
-		CronTrigger trigger = TriggerBuilder.newTrigger().withIdentity(TRIGGER_NAME, GROUP_NAME)
-				.withSchedule(CronScheduleBuilder.cronSchedule(reminder.getCronExpression())).build();
+		Trigger trigger;
+		if (reminder.getStartHours() == 0 && reminder.getEndHours() == 0) {
+			long startTimeMs = System.currentTimeMillis() + (reminder.getRepeatMinutes() * 60 * 1000);
+			trigger = TriggerBuilder.newTrigger().withIdentity(TRIGGER_NAME, GROUP_NAME).startAt(new Date(startTimeMs))
+					.withSchedule(SimpleScheduleBuilder.simpleSchedule()
+							.withIntervalInMinutes(reminder.getRepeatMinutes()).repeatForever())
+					.build();
+		} else {
+			trigger = TriggerBuilder.newTrigger().withIdentity(TRIGGER_NAME, GROUP_NAME)
+					.withSchedule(CronScheduleBuilder.cronSchedule(reminder.getCronExpression())).build();
+		}
+
 		sched.scheduleJob(job, trigger);
 	}
 
