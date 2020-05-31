@@ -68,6 +68,9 @@
 									<mainClass>de.devjeff.fitnessreminder.FitnessReminderApp</mainClass>
 								</manifest>
 							</archive>
+							<descriptors>
+								<descriptor>assembly-desc.xml</descriptor>
+							</descriptors>
 							<descriptorRefs>
 								<descriptorRef>jar-with-dependencies</descriptorRef>
 							</descriptorRefs>

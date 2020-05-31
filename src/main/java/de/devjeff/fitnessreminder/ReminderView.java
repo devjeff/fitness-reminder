@@ -103,6 +103,7 @@ public class ReminderView extends JFrame {
 		JLabel repeatLabel = new JLabel("Repeat every:");
 		c.gridx = 0;
 		c.gridy = 0;
+		c.anchor = GridBagConstraints.LINE_END;
 		mainPanel.add(repeatLabel, c);
 		c.anchor = GridBagConstraints.CENTER;
 
