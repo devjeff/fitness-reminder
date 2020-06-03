@@ -7,7 +7,7 @@ When working at the computer we often forget to do fitness or simple stretching 
 <img style=" margin: 10px auto 20px; display: block;" src="src/test/resources/screenshot.png" alt="App screenshot">
 
 **Latest version**
-- will be added soon
+- [Fitness Reminder 1.0](https://github.com/devjeff/fitness-reminder/releases/download/v1.0/fitness-reminder-1.0.0.jar)
 <br/><br/>
 
 **Why not just using one of the plenty mobile apps?**
