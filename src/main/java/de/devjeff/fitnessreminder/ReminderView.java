@@ -68,12 +68,14 @@ public class ReminderView extends JFrame {
 			PopupMenu popup = createTrayMenu();
 			trayIcon = new TrayIcon(image, "Fitness Reminder", popup);
 			trayIcon.setImageAutoSize(true);
+			addTrayIconHandling();
+			setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		} else {
 			System.out.println("system tray not supported");
+			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		}
 
 		getContentPane().add(createContent(), BorderLayout.CENTER);
-		addTrayIconHandling();
 
 		setIconImage(image);
 		setVisible(true);
@@ -82,7 +84,6 @@ public class ReminderView extends JFrame {
 		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
 
-		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		if (Files.exists(controller.getConfigFile())) {
 			try {
 				controller.loadReminder();
